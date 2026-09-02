@@ -1,0 +1,704 @@
+Quiero desarrollar una plataforma empresarial moderna denominada CITI Platform (Centro Inteligente de Tecnologías de la Información).
+
+No deseo crear otro sistema independiente.
+
+Quiero construir una plataforma central que permita administrar absolutamente todos los sistemas desarrollados por la Coordinación de Informática desde un único portal web.
+
+La plataforma debe convertirse en el centro de operaciones tecnológicas institucionales, desde donde sea posible monitorear, administrar, respaldar, configurar, actualizar y controlar todos los servicios tecnológicos de la organización.
+
+Debe estar diseñada con estándares empresariales, arquitectura escalable y preparada para evolucionar durante muchos años.
+
+No quiero una aplicación tipo CRUD.
+
+Quiero una plataforma comparable conceptualmente con soluciones como:
+
+ServiceNow
+ManageEngine
+IBM Maximo
+Microsoft System Center
+Grafana
+Portainer
+Cockpit
+Kubernetes Dashboard
+VMware vCenter
+
+pero completamente orientada a la realidad de la Corte Superior de Justicia de Lima y desarrollada íntegramente con software libre.
+
+VISIÓN
+
+CITI Platform será el punto central desde donde se administrarán todos los sistemas institucionales.
+
+Cada sistema conservará su propia independencia técnica.
+
+Cada sistema seguirá teniendo:
+
+su propia base de datos
+su propio backend
+su propio frontend
+su propia configuración
+sus propios respaldos
+sus propios logs
+sus propios servicios
+
+Sin embargo, todos serán administrados desde un único portal.
+
+ARQUITECTURA GENERAL
+
+Cada sistema podrá estar construido con diferentes tecnologías.
+
+Ejemplo:
+
+Sistema A
+
+Frontend React
+
+Backend FastAPI
+
+PostgreSQL
+
+Sistema B
+
+Frontend React
+
+Backend NodeJS
+
+PostgreSQL
+
+Sistema C
+
+Vue
+
+.NET
+
+SQL Server
+
+Sistema D
+
+Angular
+
+Java Spring
+
+Oracle
+
+No importa la tecnología.
+
+CITI debe ser capaz de administrarlos todos.
+
+OBJETIVO PRINCIPAL
+
+Convertirse en el Centro de Operaciones Tecnológicas de la institución.
+
+Desde una sola pantalla quiero poder administrar:
+
+aplicaciones
+servidores
+servicios
+bases de datos
+respaldos
+monitoreo
+logs
+usuarios
+configuraciones
+despliegues
+infraestructura
+FILOSOFÍA DEL PROYECTO
+
+La plataforma no administrará únicamente servidores.
+
+Administrará el ciclo de vida completo de las aplicaciones institucionales.
+
+Desde su creación hasta su retiro.
+
+Será un Enterprise Application Lifecycle Management Platform.
+
+CONCEPTO DE SISTEMA
+
+Cada aplicación institucional será considerada un activo tecnológico compuesto por varios servicios.
+
+Ejemplo
+
+Sistema HelpDesk
+
+Frontend
+
+Backend
+
+Base de datos
+
+Variables de entorno
+
+Repositorio Git
+
+Logs
+
+Backups
+
+Versiones
+
+Documentación
+
+Dependencias
+
+Servicios Windows
+
+Certificados
+
+Cron Jobs
+
+Cada uno podrá administrarse individualmente.
+
+FUNCIONALIDADES PRINCIPALES
+Dashboard Ejecutivo
+
+Mostrar en tiempo real
+
+Estado de cada sistema
+
+Disponibilidad
+
+CPU
+
+RAM
+
+Disco
+
+Conexiones
+
+Tiempo activo
+
+Versión instalada
+
+Cantidad de usuarios
+
+Último respaldo
+
+Última actualización
+
+Estado de salud
+
+Alertas críticas
+
+Centro de Aplicaciones
+
+Mostrar todos los sistemas registrados.
+
+Ejemplo
+
+HelpDesk
+
+Sistema de Activos
+
+Sistema de Saludos
+
+Sistema de Boletas
+
+Sistema de Respaldos
+
+Sistema IA
+
+Portal Institucional
+
+Sistema de Inventario
+
+Sistema de Monitoreo
+
+etc.
+
+Cada uno tendrá una ficha técnica completa.
+
+Control de Servicios
+
+Cada sistema estará compuesto por múltiples servicios.
+
+Por ejemplo
+
+Frontend
+
+Backend
+
+Base de Datos
+
+Redis
+
+Nginx
+
+Servicio Windows
+
+PM2
+
+FTP
+
+SMTP
+
+Cada servicio podrá
+
+Iniciar
+
+Detener
+
+Reiniciar
+
+Reinicio forzado
+
+Ver estado
+
+Ver consumo
+
+Ver logs
+
+Cambiar configuración
+
+Ver historial
+
+Todo desde un botón tipo switch.
+
+Gestión de Infraestructura
+
+Administrar
+
+Servidores Windows
+
+Servidores Linux
+
+Máquinas virtuales
+
+Contenedores
+
+NAS
+
+UPS
+
+Switches
+
+Routers
+
+Firewalls
+
+Servicios Web
+
+Bases de Datos
+
+Centro de Configuración
+
+Cada sistema tendrá
+
+Variables ENV
+
+Puertos
+
+Rutas
+
+SMTP
+
+FTP
+
+JWT
+
+APIs
+
+Tokens
+
+Secretos
+
+Configuraciones específicas
+
+Todo editable desde la plataforma.
+
+Gestión de Versiones
+
+Cada sistema tendrá
+
+Historial de versiones
+
+Notas de cambios
+
+Rollback
+
+Actualización automática
+
+Comparación entre versiones
+
+Control de despliegues
+
+Centro de Respaldos
+
+Respaldar
+
+Base de datos
+
+Frontend
+
+Backend
+
+Configuraciones
+
+Documentos
+
+Logs
+
+Archivos
+
+Automáticamente o manualmente.
+
+Restauración con un clic.
+
+Verificación de integridad mediante hash.
+
+Historial completo.
+
+Monitoreo
+
+Monitor en tiempo real de
+
+CPU
+
+RAM
+
+Disco
+
+Temperatura
+
+Red
+
+Puertos
+
+Servicios
+
+Tiempo de respuesta
+
+Latencia
+
+SSL
+
+Certificados
+
+Internet
+
+Estado de servidores
+
+Estado de aplicaciones
+
+Disponibilidad
+
+Alertas
+
+Centro de Logs
+
+Visualizador centralizado.
+
+Logs
+
+Backend
+
+Frontend
+
+PostgreSQL
+
+Nginx
+
+Windows
+
+Linux
+
+PowerShell
+
+FastAPI
+
+NodeJS
+
+Con filtros
+
+Búsquedas
+
+Exportación
+
+Análisis
+
+Gestión Documental
+
+Cada sistema tendrá
+
+Manual técnico
+
+Manual usuario
+
+Arquitectura
+
+Diagramas
+
+Scripts
+
+PDF
+
+Imágenes
+
+Videos
+
+Versiones
+
+Procedimientos
+
+Todo relacionado con ese sistema.
+
+Inventario Tecnológico
+
+Registrar
+
+Aplicaciones
+
+Servidores
+
+Equipos
+
+Licencias
+
+Bases de datos
+
+Repositorios
+
+Dominios
+
+Certificados
+
+Dependencias
+
+Todo relacionado.
+
+Integración Git
+
+Cada sistema conocerá
+
+Repositorio
+
+Branch
+
+Último commit
+
+Último despliegue
+
+Autor
+
+Versiones
+
+Centro de Despliegues
+
+Actualizar desde
+
+Git
+
+ZIP
+
+Repositorio
+
+Servidor
+
+Realizar
+
+Backup
+
+Actualización
+
+Rollback
+
+Validación
+
+Notificación
+
+Notificaciones
+
+Correo
+
+Telegram
+
+WhatsApp
+
+Microsoft Teams
+
+Dashboard
+
+Alertas automáticas.
+
+IA INSTITUCIONAL
+
+Uno de los objetivos más importantes es incorporar una IA especializada.
+
+No será un chatbot.
+
+Será un asistente experto en la infraestructura institucional.
+
+Debe conocer
+
+los sistemas
+
+los servidores
+
+las configuraciones
+
+los procedimientos
+
+la documentación
+
+los tickets
+
+los respaldos
+
+los eventos
+
+los logs
+
+las incidencias
+
+los scripts
+
+las versiones
+
+las dependencias
+
+Debe poder responder preguntas como
+
+¿Por qué cayó HelpDesk?
+
+¿Por qué PostgreSQL está lento?
+
+¿Cuándo fue el último respaldo?
+
+¿Qué cambió ayer?
+
+¿Qué servidor consume más memoria?
+
+¿Qué aplicaciones dependen de Redis?
+
+¿Qué puertos están ocupados?
+
+¿Cuántas veces falló este sistema?
+
+¿Qué versión está instalada?
+
+¿Cómo soluciono este error?
+
+Además debe sugerir soluciones basadas en el historial institucional.
+
+AGENTE CITI
+
+Cada servidor tendrá instalado un agente ligero.
+
+El agente permitirá
+
+leer métricas
+
+ejecutar comandos autorizados
+
+reiniciar servicios
+
+crear respaldos
+
+leer logs
+
+reportar eventos
+
+actualizar aplicaciones
+
+enviar métricas
+
+Todo de forma segura.
+
+SEGURIDAD
+
+JWT
+
+RBAC
+
+Auditoría
+
+Historial completo
+
+2FA
+
+HTTPS
+
+Logs inmutables
+
+Encriptación
+
+Control por roles
+
+Registro de todas las acciones.
+
+ESCALABILIDAD
+
+La plataforma debe poder administrar
+
+decenas de servidores
+
+cientos de aplicaciones
+
+miles de servicios
+
+millones de registros
+
+múltiples sedes
+
+sin modificar la arquitectura.
+
+Debe ser modular y permitir incorporar nuevos módulos sin afectar los existentes.
+
+STACK TECNOLÓGICO PREFERIDO
+
+Frontend
+
+React
+TypeScript
+Vite
+TailwindCSS
+React Query
+React Router
+shadcn/ui
+
+Backend
+
+FastAPI
+SQLAlchemy
+Alembic
+Pydantic
+Celery
+
+Base de datos
+
+PostgreSQL
+
+Cache
+
+Redis
+
+Monitoreo
+
+Prometheus
+Grafana
+Node Exporter
+
+Observabilidad
+
+Loki
+Promtail
+
+Contenedores (opcional)
+
+Docker
+Docker Compose
+
+Sistema Operativo
+
+Windows Server
+Linux
+
+Automatización
+
+PowerShell
+Bash
+FILOSOFÍA DE DESARROLLO
+
+No quiero construir una aplicación.
+
+Quiero construir una plataforma institucional que pueda evolucionar durante los próximos 10 a 15 años, convertirse en el núcleo tecnológico de la Coordinación de Informática y servir como base para administrar todos los sistemas presentes y futuros de la Corte Superior de Justicia de Lima.
+
+Toda propuesta de arquitectura, base de datos, APIs, interfaz de usuario, módulos, procesos y funcionalidades debe seguir principios de ingeniería de software empresarial, alta disponibilidad, escalabilidad, mantenibilidad, seguridad y experiencia de usuario, priorizando el uso de software libre y costo de licenciamiento cero.

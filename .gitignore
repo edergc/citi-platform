@@ -1,0 +1,44 @@
+backend/.venv/
+backend/.env
+backend/__pycache__/
+backend/**/__pycache__/
+backend/logs/
+backend/*.log
+*.pyc
+
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+agent/.venv/
+agent/agent_config.json
+agent/__pycache__/
+agent/logs/
+agent/vendor/
+agent/*.log
+*.bak
+
+.DS_Store
+
+# Secrets and private keys — never commit
+certs/
+
+# Real database/service backups and uploaded documents — sensitive institutional data
+backups/
+storage/
+
+# Operational data stores (Grafana/Loki/Prometheus/Alloy) — large, regenerable, not source
+observability/
+
+# Vendored third-party binaries — not project source
+tools/
+
+# Personal Claude Code settings (per-machine, not shared)
+.claude/settings.local.json
+
+# Loose reference files at the project root — not part of any tracked app
+/img/
+/virtual*.jpg
+/home-server-monitor.webp
+/*.xls
+/*.xlsx

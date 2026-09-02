@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Instalar el Agente CITI</title>
+<style>
+  :root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-raised: #eef2f8;
+    --border: #d8e0ec;
+    --text: #182233;
+    --text-dim: #5b6b84;
+    --accent: #0284c7;
+    --accent-strong: #0369a1;
+    --accent-soft: #e0f2fe;
+    --success: #059669;
+    --success-soft: #ecfdf5;
+    --warning: #b45309;
+    --warning-soft: #fffbeb;
+    --danger: #dc2626;
+    --code-bg: #101826;
+    --code-text: #d7e2f2;
+    --code-header: #1a2436;
+    --code-border: #263349;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1220;
+      --surface: #121a2c;
+      --surface-raised: #182338;
+      --border: #24304a;
+      --text: #e4e9f2;
+      --text-dim: #8b96ad;
+      --accent: #38bdf8;
+      --accent-strong: #7dd3fc;
+      --accent-soft: #0c2536;
+      --success: #34d399;
+      --success-soft: #0d2b21;
+      --warning: #fbbf24;
+      --warning-soft: #2c220a;
+      --danger: #f87171;
+      --code-bg: #0a0f1a;
+      --code-text: #d7e2f2;
+      --code-header: #111a2b;
+      --code-border: #212d45;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono {
+    font-family: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---- header ---- */
+  header.top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    margin: 0 0 0;
+  }
+  .top-inner {
+    max-width: 712px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  nav.steps-nav {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  nav.steps-nav a {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  nav.steps-nav a:hover, nav.steps-nav a:focus-visible {
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface-raised);
+  }
+
+  /* ---- hero / intro ---- */
+  .intro {
+    padding: 40px 0 28px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .intro p.sub {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .flow {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+  .flow .node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 10px;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .flow .node span.tag {
+    display: block;
+    font-weight: 400;
+    color: var(--text-dim);
+    font-size: 11.5px;
+  }
+  .flow .arrow {
+    color: var(--accent);
+    font-size: 16px;
+  }
+
+  /* ---- prereqs ---- */
+  .prereqs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 28px 0 8px;
+  }
+  @media (max-width: 640px) { .prereqs { grid-template-columns: 1fr; } }
+  .prereq {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .prereq .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .prereq .value {
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .prereq .value.mono { font-size: 13px; }
+
+  /* ---- steps ---- */
+  section.step {
+    margin-top: 48px;
+    scroll-margin-top: 80px;
+  }
+  .step-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .step-num {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+  }
+  .step h2 {
+    font-size: 19px;
+    margin: 0;
+    font-weight: 650;
+  }
+  .step-body { margin-top: 14px; }
+  .step p { margin: 0 0 12px; color: var(--text); }
+  .step p.hint { color: var(--text-dim); font-size: 13.5px; }
+
+  .term {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 14px 0;
+  }
+  .term .term-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--code-header);
+    border-bottom: 1px solid var(--code-border);
+    padding: 7px 12px;
+  }
+  .term .term-head .label {
+    font-size: 11.5px;
+    color: #8b96ad;
+    font-family: ui-monospace, Consolas, monospace;
+  }
+  .term .term-head button {
+    font-size: 11px;
+    color: #8b96ad;
+    background: transparent;
+    border: 1px solid var(--code-border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .term .term-head button:hover { color: var(--code-text); border-color: #3a4863; }
+  .term .term-head button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .term pre {
+    margin: 0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--code-text);
+    white-space: pre;
+  }
+  .term .ph { color: #7dd3fc; font-style: italic; }
+  .term .cm { color: #6b7793; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    margin: 14px 0;
+    border: 1px solid var(--border);
+  }
+  .callout.warn { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 35%, var(--border)); }
+  .callout.ok { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }
+  .callout strong { display: block; margin-bottom: 3px; }
+
+  /* ---- verify table ---- */
+  table.verify {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 14px;
+  }
+  table.verify th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.verify td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.verify tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+  .pill.ok { background: var(--success-soft); color: var(--success); }
+  .pill.bad { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+
+  footer.end {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12.5px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  a.ref { color: var(--accent-strong); text-decoration: none; }
+  a.ref:hover { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><span class="dot"></span> CITI Platform &middot; Infraestructura</div>
+    <nav class="steps-nav">
+      <a href="#paso-1">1. Descargar</a>
+      <a href="#paso-2">2. Extraer</a>
+      <a href="#paso-3">3. Ejecutar</a>
+      <a href="#paso-4">4. Verificar</a>
+      <a href="#manual">Manual (avanzado)</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+
+  <div class="intro">
+    <h1>Instalar el Agente CITI en un servidor nuevo</h1>
+    <p class="sub">Descarga, extrae, ejecuta. El instalador trae todo incluido — ni siquiera necesitas Python en el servidor nuevo.</p>
+
+    <div class="flow">
+      <div class="node">Servidor de sede<span class="tag">agente instalado aquí</span></div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">CITI Core<span class="tag">172.20.1.51:8010</span></div>
+      <div class="arrow">&#8594;</div>
+      <div class="node">Panel CITI<span class="tag">detalle del servidor</span></div>
+    </div>
+    <p class="hint" style="margin-top:10px;">El agente <em>se conecta hacia CITI Core</em> (no al revés) y mantiene la conexión abierta: no necesitas abrir puertos de entrada en el servidor nuevo, solo permitir la salida hacia el puerto 8010.</p>
+  </div>
+
+  <div class="prereqs">
+    <div class="prereq">
+      <div class="label">Sistema operativo</div>
+      <div class="value">Windows Server</div>
+    </div>
+    <div class="prereq">
+      <div class="label">Requiere instalar</div>
+      <div class="value">Nada — Python va incluido</div>
+    </div>
+    <div class="prereq">
+      <div class="label">Acceso</div>
+      <div class="value">Administrador local</div>
+    </div>
+  </div>
+
+  <section class="step" id="paso-1">
+    <div class="step-head"><span class="step-num">01</span><h2>Descarga el instalador</h2></div>
+    <div class="step-body">
+      <p>En CITI, ve a <strong>Servidores &rarr; (elige o crea el servidor)</strong> y haz clic en <strong>"Descargar instalador"</strong>. Se genera al vuelo un <code>.zip</code> único para ese servidor (~14&nbsp;MB), con el token de enrolamiento, la URL de CITI y el hostname ya incrustados adentro.</p>
+      <p class="hint">Ese botón llama directo al backend de CITI por LAN — no depende de ningún sitio externo.</p>
+    </div>
+  </section>
+
+  <section class="step" id="paso-2">
+    <div class="step-head"><span class="step-num">02</span><h2>Cópialo al servidor nuevo y extráelo</h2></div>
+    <div class="step-body">
+      <p>Lleva el <code>.zip</code> al servidor (USB, carpeta compartida, lo que tengas a mano) y extráelo completo en cualquier carpeta, por ejemplo <code>C:\CITI-Agent</code>. Adentro encontrarás <code>citi_agent.py</code>, <code>enroll.py</code>, <code>nssm.exe</code>, <code>install.bat</code>, <code>install.ps1</code> y una carpeta <code>python\</code> — ese es el intérprete de Python ya preparado con todo lo que el agente necesita.</p>
+      <div class="callout warn">
+        <strong>Extrae el .zip completo.</strong>
+        La carpeta <code>python\</code> pesa ~30&nbsp;MB descomprimida; si el antivirus o una copia a medias la deja incompleta, el instalador fallará en el paso siguiente.
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="paso-3">
+    <div class="step-head"><span class="step-num">03</span><h2>Ejecuta install.bat</h2></div>
+    <div class="step-body">
+      <p>Doble clic sobre <code>install.bat</code>. Se autoeleva a Administrador (aceptas el aviso de Windows) y hace todo solo, sin abrir PowerShell a mano:</p>
+      <table class="verify">
+        <thead><tr><th>Paso interno</th><th>Qué hace</th></tr></thead>
+        <tbody>
+          <tr><td>Enrolamiento</td><td>Usa el Python incluido para llamar a <code>enroll.py</code> con el token ya incrustado — no hay nada que escribir.</td></tr>
+          <tr><td>Servicio de Windows</td><td>Registra e inicia <code>CitiAgent</code> con NSSM, apuntando al Python incluido.</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">Termina con un mensaje verde "Listo" o, si algo falla, un mensaje rojo explicando qué revisar.</p>
+    </div>
+  </section>
+
+  <section class="step" id="paso-4">
+    <div class="step-head"><span class="step-num">04</span><h2>Verifica en CITI</h2></div>
+    <div class="step-body">
+      <p>Entra a <strong>Servidores &rarr; (este servidor)</strong> en el panel. En menos de 15 segundos deberías ver:</p>
+      <table class="verify">
+        <thead><tr><th>Qué mirar</th><th>Esperado</th></tr></thead>
+        <tbody>
+          <tr><td>Estado del agente</td><td><span class="pill ok">Agente activo</span></td></tr>
+          <tr><td>Último latido</td><td>"hace unos segundos", refrescando solo</td></tr>
+          <tr><td>CPU / RAM / Discos</td><td>Valores reales del servidor, no en blanco</td></tr>
+        </tbody>
+      </table>
+      <p class="hint" style="margin-top:14px;">Si algo no aparece, revisa <code>logs\service-stderr.log</code> dentro de la carpeta del agente en el servidor nuevo — ahí queda cualquier error de conexión.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head"><h2 style="font-size:16px;">Problemas comunes</h2></div>
+    <div class="step-body">
+      <table class="verify">
+        <thead><tr><th>Síntoma</th><th>Causa probable</th></tr></thead>
+        <tbody>
+          <tr><td>"No se encontró el intérprete de Python incluido"</td><td>El .zip se extrajo incompleto — vuelve a extraerlo completo (ver aviso del paso 2).</td></tr>
+          <tr><td>El agente nunca queda "activo"</td><td>El servidor nuevo no puede alcanzar <code class="mono">172.20.1.51:8010</code> — revisa firewall/proxy de salida.</td></tr>
+          <tr><td>El enrolamiento falla</td><td>Token vencido o ya usado (cada .zip trae uno de un solo uso). Descarga un instalador nuevo desde el panel.</td></tr>
+          <tr><td>El servicio no arranca</td><td>Revisa con <code class="mono">nssm.exe edit CitiAgent</code> dentro de la carpeta extraída que las rutas apunten ahí.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="step" id="manual">
+    <div class="step-head"><h2 style="font-size:16px;">Instalación manual (avanzada, opcional)</h2></div>
+    <div class="step-body">
+      <p>Si prefieres usar tu propia instalación de Python 3.12+ en vez del intérprete incluido, puedes hacerlo a mano con los mismos <code>citi_agent.py</code>/<code>enroll.py</code> y el botón "Generar solo el token" del panel:</p>
+      <div class="term">
+        <div class="term-head"><span class="label">PowerShell — carpeta del agente</span><button onclick="copyBlock(this)">Copiar</button></div>
+        <pre>python -m venv .venv
+.venv\Scripts\pip install websockets==14.1 httpx==0.28.1 psutil==6.1.1
+.venv\Scripts\python enroll.py --core-url <span class="ph">http://172.20.1.51:8010</span> --server-id <span class="ph">&lt;id&gt;</span> --token <span class="ph">&lt;token&gt;</span>
+.\nssm.exe install CitiAgent "%cd%\.venv\Scripts\python.exe"
+.\nssm.exe set CitiAgent AppDirectory "%cd%"
+.\nssm.exe set CitiAgent AppParameters "-u citi_agent.py"
+.\nssm.exe set CitiAgent Start SERVICE_AUTO_START
+.\nssm.exe start CitiAgent</pre>
+      </div>
+      <p class="hint">Esto requiere que ese servidor tenga salida a internet (o un índice de paquetes propio) para instalar las dependencias — el instalador con un clic no necesita nada de esto.</p>
+    </div>
+  </section>
+
+  <footer class="end">
+    <span>CITI Core: <span class="mono">172.20.1.51:8010</span></span>
+    <span>Repositorio: <code class="mono">agent\</code> en Citi-Platform</span>
+  </footer>
+
+</div>
+
+<script>
+  function copyBlock(btn) {
+    var pre = btn.closest('.term').querySelector('pre');
+    var text = pre.innerText;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        var original = btn.textContent;
+        btn.textContent = 'Copiado';
+        setTimeout(function () { btn.textContent = original; }, 1400);
+      }).catch(function () {});
+    }
+  }
+</script>
+</body>
+</html>

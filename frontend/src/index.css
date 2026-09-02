@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply m-0 bg-slate-950 text-slate-100 antialiased;
+  /* Segoe UI matches the institutional identity already used in outbound emails
+     (see backend/app/services/email_templates.py) and is guaranteed present on every
+     Windows machine in the institution — no external font fetch, so it can't be blocked
+     by the institutional proxy the way a Google Fonts CDN link would be. */
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.animate-kenburns {
+  animation: kenburns 25s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-kenburns {
+    animation: none;
+  }
+}
