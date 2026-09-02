@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guía de uso — CITI Platform</title>
+<style>
+  :root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --surface-raised: #eef2f8;
+    --border: #d8e0ec;
+    --text: #182233;
+    --text-dim: #5b6b84;
+    --accent: #0284c7;
+    --accent-strong: #0369a1;
+    --accent-soft: #e0f2fe;
+    --success: #059669;
+    --success-soft: #ecfdf5;
+    --warning: #b45309;
+    --warning-soft: #fffbeb;
+    --danger: #dc2626;
+    --danger-soft: #fef2f2;
+    --code-bg: #101826;
+    --code-text: #d7e2f2;
+    --code-header: #1a2436;
+    --code-border: #263349;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1220;
+      --surface: #121a2c;
+      --surface-raised: #182338;
+      --border: #24304a;
+      --text: #e4e9f2;
+      --text-dim: #8b96ad;
+      --accent: #38bdf8;
+      --accent-strong: #7dd3fc;
+      --accent-soft: #0c2536;
+      --success: #34d399;
+      --success-soft: #0d2b21;
+      --warning: #fbbf24;
+      --warning-soft: #2c220a;
+      --danger: #f87171;
+      --danger-soft: #2c1414;
+      --code-bg: #0a0f1a;
+      --code-text: #d7e2f2;
+      --code-header: #111a2b;
+      --code-border: #212d45;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Segoe UI Variable", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono {
+    font-family: ui-monospace, "Cascadia Code", "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  header.top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    margin: 0 0 0;
+  }
+  .top-inner {
+    max-width: 712px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  nav.steps-nav {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  nav.steps-nav a {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  nav.steps-nav a:hover, nav.steps-nav a:focus-visible {
+    border-color: var(--border);
+    color: var(--text);
+    background: var(--surface-raised);
+  }
+
+  .intro {
+    padding: 40px 0 28px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+  .intro p.sub {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .prereqs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 28px 0 8px;
+  }
+  @media (max-width: 640px) { .prereqs { grid-template-columns: 1fr; } }
+  .prereq {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .prereq .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .prereq .value {
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .prereq .value.mono { font-size: 13px; }
+
+  section.step {
+    margin-top: 48px;
+    scroll-margin-top: 80px;
+  }
+  .step-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .step-num {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+  }
+  .step h2 {
+    font-size: 19px;
+    margin: 0;
+    font-weight: 650;
+  }
+  .step-body { margin-top: 14px; }
+  .step p { margin: 0 0 12px; color: var(--text); }
+  .step p.hint { color: var(--text-dim); font-size: 13.5px; }
+  .step ol, .step ul { margin: 0 0 12px; padding-left: 22px; }
+  .step li { margin-bottom: 6px; }
+
+  .callout {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    margin: 14px 0;
+    border: 1px solid var(--border);
+  }
+  .callout.warn { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 35%, var(--border)); }
+  .callout.ok { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }
+  .callout.danger { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+  .callout strong { display: block; margin-bottom: 3px; }
+
+  table.verify {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 14px;
+  }
+  table.verify th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.verify td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.verify tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 999px;
+  }
+  .pill.ok { background: var(--success-soft); color: var(--success); }
+  .pill.warn { background: var(--warning-soft); color: var(--warning); }
+  .pill.bad { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+
+  .grid-sections {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  @media (max-width: 640px) { .grid-sections { grid-template-columns: 1fr; } }
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .section-card .name { font-weight: 650; font-size: 14px; margin-bottom: 3px; }
+  .section-card .desc { color: var(--text-dim); font-size: 13px; }
+
+  footer.end {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12.5px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  a.ref { color: var(--accent-strong); text-decoration: none; }
+  a.ref:hover { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><span class="dot"></span> CITI Platform &middot; Guía de uso</div>
+    <nav class="steps-nav">
+      <a href="#paso-1">1. Entrar</a>
+      <a href="#paso-2">2. El panel</a>
+      <a href="#paso-3">3. Alertas</a>
+      <a href="#paso-4">4. Mantenimiento</a>
+      <a href="#soporte">Soporte</a>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+
+  <div class="intro">
+    <h1>Cómo usar CITI Platform</h1>
+    <p class="sub">Guía rápida para técnicos de sede: qué mirar, cómo reconocer una alerta, y cómo avisarle al sistema que vas a hacer mantenimiento antes de tocar algo.</p>
+  </div>
+
+  <div class="prereqs">
+    <div class="prereq">
+      <div class="label">Dirección</div>
+      <div class="value mono">https://172.20.1.51</div>
+    </div>
+    <div class="prereq">
+      <div class="label">Usuario</div>
+      <div class="value">Tu DNI</div>
+    </div>
+    <div class="prereq">
+      <div class="label">Alcance</div>
+      <div class="value">Solo ves tu(s) sede(s)</div>
+    </div>
+  </div>
+
+  <section class="step" id="paso-1">
+    <div class="step-head"><span class="step-num">01</span><h2>Entrar</h2></div>
+    <div class="step-body">
+      <p>Abre <strong class="mono">https://172.20.1.51</strong> en el navegador. La primera vez en cada equipo va a salir una advertencia de "conexión no privada" — es esperado, el certificado es propio de CITI, no de una entidad externa. Haz clic en <strong>"Avanzado"</strong> y luego <strong>"Continuar al sitio"</strong> (o "Proceder"). Solo pasa una vez por equipo.</p>
+      <p>Ingresa con tu <strong>DNI</strong> y la contraseña institucional que te dieron. Si no la tienes o la olvidaste, usa "¿Olvidaste tu contraseña?" en la pantalla de acceso.</p>
+      <div class="callout warn">
+        <strong>Lo que ves depende de tu sede.</strong>
+        Si eres técnico de una sede específica, solo vas a ver los servidores y datos de esa sede — no es un error, es cómo está diseñado. Si crees que te falta ver algo, pide a un administrador que revise tu perfil en Administración &rarr; Usuarios.
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="paso-2">
+    <div class="step-head"><span class="step-num">02</span><h2>Recorrido rápido por el panel</h2></div>
+    <div class="step-body">
+      <p>El menú de la izquierda tiene estas secciones:</p>
+      <div class="grid-sections">
+        <div class="section-card"><div class="name">Sistemas</div><div class="desc">Los sistemas institucionales (HelpDesk, Permisos, etc.) y el estado de sus servicios.</div></div>
+        <div class="section-card"><div class="name">Servidores</div><div class="desc">Inventario de servidores por sede — CPU, RAM, disco, quién es el responsable.</div></div>
+        <div class="section-card"><div class="name">Conectividad</div><div class="desc">Qué servidor está en línea o desconectado ahora mismo, y su historial.</div></div>
+        <div class="section-card"><div class="name">Diagnóstico de red</div><div class="desc">Calidad de la ruta de red de cada servidor hacia el servidor central (CITI Core).</div></div>
+        <div class="section-card"><div class="name">Problemas</div><div class="desc">Todo lo que necesita atención ahora mismo, junto en un solo lugar.</div></div>
+        <div class="section-card"><div class="name">Alertas</div><div class="desc">Historial de alertas por umbrales (CPU/RAM/disco altos) — aquí se reconocen.</div></div>
+        <div class="section-card"><div class="name">Mantenimiento</div><div class="desc">Programar una ventana de mantenimiento para silenciar avisos mientras trabajas.</div></div>
+        <div class="section-card"><div class="name">Sintéticos</div><div class="desc">Si un sistema realmente responde, probado desde varias sedes a la vez.</div></div>
+      </div>
+      <p class="hint" style="margin-top:14px;">La campanita 🔔 arriba a la derecha te avisa de eventos nuevos aunque no estés en la sección correspondiente.</p>
+    </div>
+  </section>
+
+  <section class="step" id="paso-3">
+    <div class="step-head"><span class="step-num">03</span><h2>Reconocer una alerta</h2></div>
+    <div class="step-body">
+      <p>Cuando un servidor supera un umbral (por ejemplo, disco por encima del 90%), aparece una alerta en <strong>Alertas</strong> y, si es crítica, un aviso emergente al entrar al panel. "Reconocer" una alerta le dice al sistema y a tus compañeros "ya la vi, la estoy atendiendo" — no la resuelve sola, solo evita que siga sonando como si nadie la hubiera visto.</p>
+      <ol>
+        <li>Ve a <strong>Alertas</strong> (o haz clic en el aviso emergente).</li>
+        <li>Ubica la alerta y haz clic en <strong>"Reconocer"</strong>.</li>
+        <li>Resuelve el problema real en el servidor (liberar espacio, reiniciar el servicio, lo que corresponda) — la alerta se marca "Resuelta" sola cuando la métrica vuelve a estar bajo el umbral.</li>
+      </ol>
+      <div class="callout ok">
+        <strong>El correo y la campanita se silencian, no el historial.</strong>
+        Mientras haya una ventana de mantenimiento activa sobre ese servidor o sede, no te van a llegar avisos por correo ni campanita — pero la alerta se sigue registrando igual, para que quede el historial completo.
+      </div>
+    </div>
+  </section>
+
+  <section class="step" id="paso-4">
+    <div class="step-head"><span class="step-num">04</span><h2>Programar una ventana de mantenimiento</h2></div>
+    <div class="step-body">
+      <p>Antes de reiniciar un servidor o hacer trabajo planificado que vaya a generar alertas falsas (el servidor se ve "caído" un rato porque tú lo apagaste, no porque falló), programa una ventana de mantenimiento:</p>
+      <ol>
+        <li>Ve a <strong>Mantenimiento</strong> &rarr; <strong>"Programar mantenimiento"</strong>.</li>
+        <li>Elige si es para un <strong>servidor</strong> puntual o toda una <strong>sede</strong>.</li>
+        <li>Define inicio y fin, y escribe el motivo (ayuda a quien revise el historial después).</li>
+        <li>Guarda — desde ese momento hasta que termine, las notificaciones de ese servidor/sede quedan en pausa.</li>
+      </ol>
+      <p class="hint">Puedes cancelar una ventana activa o programada en cualquier momento desde la misma sección.</p>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head"><h2 style="font-size:16px;">Preguntas frecuentes</h2></div>
+    <div class="step-body">
+      <table class="verify">
+        <thead><tr><th>Pregunta</th><th>Respuesta</th></tr></thead>
+        <tbody>
+          <tr><td>No veo ningún servidor</td><td>Probablemente no tienes ninguna sede asignada a tu usuario todavía — pide a un administrador que te la asigne en Administración &rarr; Usuarios.</td></tr>
+          <tr><td>Un servidor dice "Sin datos" / <span class="pill warn">Agente pendiente</span></td><td>El Agente CITI no está instalado en ese servidor todavía — ver la guía "Instalar el Agente CITI".</td></tr>
+          <tr><td>¿Por qué no puedo editar/eliminar algo?</td><td>Esa acción requiere un privilegio que tu perfil no tiene — es intencional, no un error del sistema.</td></tr>
+          <tr><td>El navegador vuelve a mostrar la advertencia del certificado</td><td>Normal si cambiaste de navegador o de equipo — cada uno la muestra una vez.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="step" id="soporte">
+    <div class="step-head"><h2 style="font-size:16px;">Soporte</h2></div>
+    <div class="step-body">
+      <p>Si algo en la plataforma misma no funciona como debería (no un problema del servidor que estás monitoreando, sino de CITI Platform), repórtalo a la Coordinación de Informática.</p>
+    </div>
+  </section>
+
+  <footer class="end">
+    <span>CITI Core: <span class="mono">172.20.1.51</span></span>
+    <span><a class="ref" href="/docs/instalar-agente.html">Ver también: Instalar el Agente CITI</a></span>
+  </footer>
+
+</div>
+</body>
+</html>

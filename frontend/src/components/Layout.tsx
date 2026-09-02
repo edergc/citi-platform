@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   FileText,
+  HelpCircle,
   Inbox,
   KeyRound,
   LayoutDashboard,
@@ -123,6 +124,10 @@ export function Layout() {
               <DropdownMenuItem onSelect={() => setChangingPassword(true)}>
                 <KeyRound className="h-4 w-4" />
                 Cambiar contraseña
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => window.open('/docs/guia-tecnicos.html', '_blank', 'noopener')}>
+                <HelpCircle className="h-4 w-4" />
+                Guía de uso
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-400 data-[highlighted]:text-red-300" onSelect={logout}>
