@@ -9,8 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import SessionLocal
+from app.models.backups import TriggerType
 from app.services.agent_watchdog import close_stale_agent_connections
 from app.services.backup_retention import purge_expired_backups
+from app.services.backup_scheduler import due_backup_jobs, execute_backup_run
 from app.services.metrics_retention import purge_old_metric_history, purge_old_network_path_history
 from app.services.synthetic_checks import run_all_checks
 from app.services.weekly_report import _next_run_at, send_weekly_report
@@ -22,6 +24,7 @@ METRICS_RETENTION_INTERVAL_SECONDS = 24 * 60 * 60
 WEEKLY_REPORT_FAILURE_BACKOFF_SECONDS = 60 * 60
 AGENT_WATCHDOG_INTERVAL_SECONDS = 20
 SYNTHETIC_CHECK_INTERVAL_SECONDS = 5 * 60
+BACKUP_SCHEDULER_INTERVAL_SECONDS = 5 * 60
 
 
 async def _backup_retention_loop() -> None:
@@ -112,6 +115,29 @@ async def _synthetic_check_loop() -> None:
         await asyncio.sleep(SYNTHETIC_CHECK_INTERVAL_SECONDS)
 
 
+async def _backup_scheduler_loop() -> None:
+    """Runs once at startup, then every BACKUP_SCHEDULER_INTERVAL_SECONDS for the
+    lifetime of the process — see app/services/backup_scheduler.py:due_backup_jobs for
+    what makes a job 'due'. Without this loop, BackupJob.schedule_cron is inert and
+    backups only ever happen via the manual 'Ejecutar ahora' button."""
+    while True:
+        try:
+            db = SessionLocal()
+            try:
+                now = datetime.now(timezone.utc)
+                jobs = await asyncio.to_thread(due_backup_jobs, db, now)
+                for job in jobs:
+                    try:
+                        await execute_backup_run(db, job, TriggerType.scheduled)
+                    except Exception:
+                        logger.exception("Error ejecutando el respaldo programado del job %s", job.id)
+            finally:
+                db.close()
+        except Exception:
+            logger.exception("Error ejecutando el planificador de respaldos")
+        await asyncio.sleep(BACKUP_SCHEDULER_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     backup_task = asyncio.create_task(_backup_retention_loop())
@@ -119,12 +145,14 @@ async def lifespan(app: FastAPI):
     report_task = asyncio.create_task(_weekly_report_loop())
     watchdog_task = asyncio.create_task(_agent_watchdog_loop())
     synthetic_task = asyncio.create_task(_synthetic_check_loop())
+    backup_scheduler_task = asyncio.create_task(_backup_scheduler_loop())
     yield
     backup_task.cancel()
     metrics_task.cancel()
     report_task.cancel()
     watchdog_task.cancel()
     synthetic_task.cancel()
+    backup_scheduler_task.cancel()
 
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.1.0", lifespan=lifespan)

@@ -14,3 +14,4 @@ cryptography==44.0.0
 redis==5.2.1
 celery==5.4.0
 python-dotenv==1.0.1
+croniter==6.2.4

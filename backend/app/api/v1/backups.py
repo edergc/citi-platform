@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, require_permission
 from app.core.agent_hub import hub
 from app.core.database import get_db
-from app.core.security import decrypt_secret
 from app.models.backups import BackupJob, BackupRun, BackupType, RestoreOperation, RunStatus, TriggerType
-from app.models.config import ConfigEntry
 from app.models.identity import User
 from app.models.systems import Service
 from app.schemas.backup import (
@@ -23,30 +21,12 @@ from app.schemas.backup import (
     RestoreOperationRead,
 )
 from app.services.audit import diff_changed_fields, log_action
+from app.services.backup_scheduler import _get_db_credentials, execute_backup_run
 from app.services.incident_notifier import notify_incident, site_id_for_server
 
 router = APIRouter(tags=["backups"], dependencies=[Depends(get_current_user)])
 
-BACKUP_TIMEOUT_SECONDS = 120
 RESTORE_TIMEOUT_SECONDS = 120
-
-REQUIRED_DB_KEYS = ("DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD")
-
-
-def _get_db_credentials(db: Session, service_id: uuid.UUID) -> dict[str, str]:
-    entries = db.scalars(select(ConfigEntry).where(ConfigEntry.service_id == service_id))
-    values: dict[str, str] = {}
-    for entry in entries:
-        if entry.key in REQUIRED_DB_KEYS and entry.value is not None:
-            values[entry.key] = decrypt_secret(entry.value) if entry.is_secret else entry.value
-
-    missing = [k for k in REQUIRED_DB_KEYS if k not in values]
-    if missing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Faltan credenciales de base de datos para este servicio: {', '.join(missing)}",
-        )
-    return values
 
 
 @router.post(
@@ -138,77 +118,7 @@ async def run_backup_job(
     job = db.get(BackupJob, job_id)
     if job is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job de respaldo no encontrado")
-    service = db.get(Service, job.service_id)
-    if service is None or service.server_id is None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El servicio no tiene servidor asignado")
-
-    run = BackupRun(backup_job_id=job.id, status=RunStatus.pending, triggered_by=TriggerType.manual, started_at=datetime.now(timezone.utc))
-    db.add(run)
-    db.commit()
-    db.refresh(run)
-    log_action(
-        db, current_user, "backup.triggered", "backup_run", run.id,
-        details={"backup_job_id": str(job.id), "type": job.type.value}, request=request,
-    )
-
-    if not hub.is_connected(service.server_id):
-        run.status = RunStatus.failed
-        run.error_message = "El Agente CITI de este servidor no está conectado."
-        run.finished_at = datetime.now(timezone.utc)
-        db.commit()
-    else:
-        if job.type == BackupType.database:
-            creds = _get_db_credentials(db, job.service_id)
-            command = {
-                "type": "backup_database",
-                "backup_run_id": str(run.id),
-                "host": creds["DB_HOST"],
-                "port": creds["DB_PORT"],
-                "dbname": creds["DB_NAME"],
-                "user": creds["DB_USER"],
-                "password": creds["DB_PASSWORD"],
-                "storage_path": job.storage_path,
-            }
-        else:
-            command = {
-                "type": "backup",
-                "backup_run_id": str(run.id),
-                "source_path": job.source_path,
-                "storage_path": job.storage_path,
-            }
-
-        future = hub.create_pending_result(run.id)
-        dispatched = await hub.send_command(service.server_id, command)
-        if not dispatched:
-            hub.discard_pending_result(run.id)
-            run.status = RunStatus.failed
-            run.error_message = "No se pudo enviar el comando al Agente CITI."
-            run.finished_at = datetime.now(timezone.utc)
-            db.commit()
-        else:
-            try:
-                await asyncio.wait_for(future, timeout=BACKUP_TIMEOUT_SECONDS)
-                db.refresh(run)
-            except asyncio.TimeoutError:
-                hub.discard_pending_result(run.id)
-                run.status = RunStatus.failed
-                run.error_message = "Tiempo de espera agotado esperando respuesta del Agente CITI."
-                run.finished_at = datetime.now(timezone.utc)
-                db.commit()
-
-    db.refresh(run)
-    if run.status == RunStatus.failed:
-        await notify_incident(
-            db,
-            site_id=site_id_for_server(db, service.server_id),
-            severity="critical",
-            title=f"Falló el respaldo de {service.name}",
-            message=f"El respaldo del servicio '{service.name}' falló: {run.error_message or 'sin detalle'}",
-            entity_type="backup_run",
-            entity_id=run.id,
-            server_id=service.server_id,
-        )
-    return run
+    return await execute_backup_run(db, job, TriggerType.manual, current_user=current_user, request=request)
 
 
 @router.post(

@@ -714,6 +714,7 @@ export interface BackupJob {
   source_path: string
   storage_path: string
   retention_days: number
+  schedule_cron: string | null
   enabled: boolean
   created_at: string
 }
@@ -724,6 +725,7 @@ export interface BackupJobInput {
   source_path: string
   storage_path: string
   retention_days: number
+  schedule_cron?: string | null
 }
 
 export interface BackupRun {

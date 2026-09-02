@@ -56,7 +56,8 @@ function BackupJobRow({ job }: { job: BackupJob }) {
         <div className="min-w-0">
           <p className="truncate text-sm text-slate-200">{job.source_path}</p>
           <p className="truncate text-xs text-slate-500">
-            → {job.storage_path} · {job.type} · retención {job.retention_days}d
+            → {job.storage_path} · {job.type} · retención {job.retention_days}d ·{' '}
+            {job.schedule_cron ? <span className="font-mono">{job.schedule_cron}</span> : 'solo manual'}
           </p>
         </div>
         <Button size="sm" disabled={runNow.isPending} onClick={() => runNow.mutate()}>

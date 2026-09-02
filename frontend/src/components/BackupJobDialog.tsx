@@ -16,11 +16,17 @@ export function BackupJobDialog({ serviceId, trigger }: { serviceId: string; tri
     source_path: '',
     storage_path: '',
     retention_days: 30,
+    schedule_cron: '',
   })
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: async () => api.post('/backup-jobs', { ...form, service_id: serviceId }),
+    mutationFn: async () =>
+      api.post('/backup-jobs', {
+        ...form,
+        service_id: serviceId,
+        schedule_cron: form.schedule_cron?.trim() ? form.schedule_cron.trim() : null,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['backup-jobs'] })
       setOpen(false)
@@ -91,6 +97,18 @@ export function BackupJobDialog({ serviceId, trigger }: { serviceId: string; tri
               value={form.retention_days}
               onChange={(e) => setForm((f) => ({ ...f, retention_days: Number(e.target.value) }))}
             />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="schedule_cron">Programación (cron, opcional)</Label>
+            <Input
+              id="schedule_cron"
+              placeholder="0 2 * * *"
+              value={form.schedule_cron ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, schedule_cron: e.target.value }))}
+            />
+            <p className="text-xs text-slate-500">
+              Vacío = solo manual. Ejemplo: <code className="font-mono">0 2 * * *</code> = todos los días a las 2:00 a.m.
+            </p>
           </div>
           {mutation.isError && <ErrorMessage>No se pudo crear el job de respaldo.</ErrorMessage>}
           <DialogFooter>
