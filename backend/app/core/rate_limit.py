@@ -6,6 +6,7 @@ avoids adding a Redis dependency just for this. If the backend is ever scaled
 to multiple worker processes, this needs to move to a shared store (Redis).
 """
 
+import ipaddress
 import time
 from collections import defaultdict
 from threading import Lock
@@ -46,7 +47,37 @@ rate_limiter = RateLimiter()
 
 
 def client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
+    """Real client IP, not Caddy's (CitiProxy sits in front of every request in
+    production — see Caddyfile — and its reverse_proxy directive adds X-Forwarded-For by
+    default, so request.client.host alone would just be 127.0.0.1 for every técnico).
+    Falls back to request.client.host (direct connections, e.g. local dev on :5190) when
+    there's no forwarded header. Always returns something INET-safe to store/rate-limit
+    on — "unknown" for anything that doesn't parse as an IP, never a raw unvalidated
+    string (see resolve_ip_for_storage for why that matters)."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        candidate = forwarded.split(",")[0].strip()
+        if _is_valid_ip(candidate):
+            return candidate
+    if request.client and _is_valid_ip(request.client.host):
+        return request.client.host
+    return "unknown"
+
+
+def _is_valid_ip(value: str) -> bool:
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
+def resolve_ip_for_storage(request: Request) -> str | None:
+    """Like client_ip, but returns None instead of "unknown" — for columns typed INET
+    (AuditLog.ip_address), which reject non-IP strings outright rather than just losing
+    rate-limiting precision."""
+    ip = client_ip(request)
+    return ip if ip != "unknown" else None
 
 
 def enforce_not_blocked(key: str, max_attempts: int, window_seconds: int, detail: str) -> None:

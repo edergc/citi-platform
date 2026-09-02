@@ -12,6 +12,9 @@
 :443 {
 	tls E:/PROGRAMACION/Citi-Platform/certs/cert.pem E:/PROGRAMACION/Citi-Platform/certs/key.pem
 
+	# reverse_proxy adds X-Forwarded-For by default — the backend's client_ip()
+	# (app/core/rate_limit.py) reads it so audit logs and the login rate limiter see the
+	# técnico's real IP instead of this proxy's own 127.0.0.1.
 	handle /api/v1/* {
 		reverse_proxy 127.0.0.1:8010
 	}

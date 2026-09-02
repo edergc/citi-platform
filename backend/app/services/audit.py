@@ -13,6 +13,7 @@ from typing import Any
 from fastapi import Request
 from sqlalchemy.orm import Session
 
+from app.core.rate_limit import resolve_ip_for_storage
 from app.models.identity import AuditLog, User
 
 SENSITIVE_VALUE_MASK = "(cambio no expuesto en auditoría)"
@@ -75,7 +76,7 @@ def log_action(
             entity_type=entity_type,
             entity_id=str(entity_id) if entity_id is not None else None,
             details=details,
-            ip_address=request.client.host if request is not None and request.client else None,
+            ip_address=resolve_ip_for_storage(request) if request is not None else None,
         )
     )
     db.commit()
