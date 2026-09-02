@@ -1,0 +1,35 @@
+# CITI Platform — production entry point for técnicos.
+# Serves the built frontend (frontend/dist) and reverse-proxies the API/WebSocket to
+# CitiBackend (127.0.0.1:8010). TLS uses the self-signed cert in certs/ — técnicos will
+# see a one-time browser warning per device until that cert is trusted (see P3 rollout
+# notes). This does NOT replace the dev workflow: `npm run dev` on :5190 keeps working
+# unchanged for active development; this proxy only serves the built dist/ output, which
+# must be regenerated with `npm run build` after frontend changes to go live here.
+{
+	admin off
+}
+
+:443 {
+	tls E:/PROGRAMACION/Citi-Platform/certs/cert.pem E:/PROGRAMACION/Citi-Platform/certs/key.pem
+
+	handle /api/v1/* {
+		reverse_proxy 127.0.0.1:8010
+	}
+
+	handle {
+		root * E:/PROGRAMACION/Citi-Platform/frontend/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output file E:/PROGRAMACION/Citi-Platform/tools/caddy/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}
+
+:80 {
+	redir https://{host}{uri} permanent
+}

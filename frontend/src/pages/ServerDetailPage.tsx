@@ -977,8 +977,8 @@ export function ServerDetailPage() {
                   <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} stroke="#334155" width={36} />
                   <Tooltip
                     contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, fontSize: 12 }}
-                    labelFormatter={(v: string) => new Date(v).toLocaleString('es-PE')}
-                    formatter={(value: number, name: string) => [`${value?.toFixed?.(1) ?? value}%`, name]}
+                    labelFormatter={(v) => new Date(v as string).toLocaleString('es-PE')}
+                    formatter={(value, name) => [`${typeof value === 'number' ? value.toFixed(1) : value}%`, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line type="monotone" dataKey="cpu_percent" name="CPU" stroke="#38bdf8" dot={false} strokeWidth={1.75} connectNulls />
