@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     DATABASE_URL: str = "postgresql+psycopg://citi_app:changeme@localhost:5432/citi_platform"
+    # Only read by backend/tests/conftest.py — never used by the running app itself.
+    TEST_DATABASE_URL: str = "postgresql+psycopg://citi_app:changeme@localhost:5432/citi_platform_test"
 
     SECRET_KEY: str = "changeme-generate-a-real-secret"
     JWT_ALGORITHM: str = "HS256"
