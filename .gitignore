@@ -33,8 +33,8 @@ observability/
 # Vendored third-party binaries — not project source
 tools/
 
-# Personal Claude Code settings (per-machine, not shared)
-.claude/settings.local.json
+# Claude Code session state (per-machine settings, scheduled-task locks) — not shared
+.claude/
 
 # Loose reference files at the project root — not part of any tracked app
 /img/
