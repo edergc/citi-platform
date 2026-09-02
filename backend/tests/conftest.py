@@ -68,13 +68,19 @@ def _reset_rate_limiter() -> None:
 
 @pytest.fixture()
 def client(db_session: Session) -> Generator[TestClient, None, None]:
+    """Deliberately NOT `with TestClient(app) as c:` — entering as a context manager
+    fires FastAPI's lifespan, which starts main.py's 6 background loops (backup/metrics
+    retention, synthetic checks, the backup scheduler, ...) against the REAL
+    app.core.database.SessionLocal/DATABASE_URL, not this fixture's db_session override —
+    those loops build their own sessions directly and don't go through get_db at all. A
+    plain (non-`with`) TestClient never sends the lifespan scope, so routes still work
+    (they only need get_db, which is overridden below) without ever touching prod data."""
     def override_get_db() -> Generator[Session, None, None]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
     try:
-        with TestClient(app) as c:
-            yield c
+        yield TestClient(app)
     finally:
         app.dependency_overrides.pop(get_db, None)
 
