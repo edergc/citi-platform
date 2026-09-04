@@ -1162,8 +1162,10 @@ export function ServerDetailPage() {
                             >
                               No controlable (instancia compartida)
                             </span>
-                          ) : (
+                          ) : hasPermission('services.manage') ? (
                             <ServiceActions serviceId={service.id} />
+                          ) : (
+                            <span className="text-xs text-slate-600">—</span>
                           )}
                         </td>
                       </tr>

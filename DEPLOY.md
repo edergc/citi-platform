@@ -73,3 +73,117 @@ redundancia. Runbook de recuperación:
    confiaron en su navegador).
 5. Arrancar `CitiBackend` → `CitiProxy` → confirmar `https://<host>/health` responde antes de
    avisar a los técnicos.
+
+## Migración de `postgresql-x64-16` de `pg_ctl runservice` a NSSM (2026-09-04)
+
+**Por qué**: el 2026-09-01 y el 2026-09-04 Windows SCM marcó `postgresql-x64-16` como "detenido"
+mientras el proceso real (`postgres.exe`, postmaster) seguía vivo y aceptando conexiones —
+confirmado con el log propio de Postgres (`FATAL: el archivo de bloqueo «postmaster.pid» ya
+existe... ¿Hay otro postmaster (PID 4796) en ejecución?`, es decir: SCM intentó re-arrancar el
+servicio como parte de resolver una dependencia — de `SistemaPermisosBackend` el 09-04, de varios
+servicios dependientes el 09-01 — y Postgres correctamente rechazó abrir un segundo postmaster).
+Se descartó reinicio del host, política de recuperación de Windows, tarea programada, y acción
+disparada desde CITI Platform (`service_action_logs` no tiene ningún registro para este servicio).
+La causa más probable es una falla conocida de `pg_ctl runservice` como wrapper de SCM: reporta su
+propio estado a Windows en un hilo separado del postmaster real, y ese reporte puede desincronizarse
+sin dejar rastro hasta que algo lo expone. El resto del stack (`CitiBackend`, `CitiProxy`, etc.) ya
+usa NSSM, que ata el estado de SCM directamente al handle del proceso real — no puede reportar
+"detenido" mientras el proceso sigue vivo.
+
+**Config original (capturada con `sc qc postgresql-x64-16` antes de tocar nada, para el rollback)**:
+
+```
+NOMBRE_RUTA_BINARIO: "C:\Program Files\PostgreSQL\16\bin\pg_ctl.exe" runservice -N "postgresql-x64-16" -D "C:\Program Files\PostgreSQL\16\data" -w
+TIPO_INICIO        : AUTO_START
+DEPENDENCIAS       : RPCSS
+NOMBRE_INICIO_SERVICIO: NT AUTHORITY\NetworkService
+NOMBRE_MOSTRAR     : postgresql-x64-16 - PostgreSQL Server 16
+```
+
+### Plan de corte (mismo nombre de servicio, para no romper `ServicesDependedOn` de los
+servicios que dependen de él — `SistemaPermisosBackend`, backend de Celebraciones, HelpDesk, etc.)
+
+```powershell
+# 1. Parada limpia (mismo método usado el 09-04 para el incidente en vivo)
+& "C:\Program Files\PostgreSQL\16\bin\pg_ctl.exe" stop -D "C:\Program Files\PostgreSQL\16\data" -m fast -w
+
+# 2. Quitar el registro SCM viejo (pg_ctl runservice) — no toca datos
+sc.exe delete postgresql-x64-16
+
+# 3. Registrar el nuevo servicio NSSM apuntando directo a postgres.exe (no a pg_ctl)
+$nssm = "E:\PROGRAMACION\Citi-Platform\tools\nssm-2.24\win64\nssm.exe"
+& $nssm install postgresql-x64-16 "C:\Program Files\PostgreSQL\16\bin\postgres.exe" -D "C:\Program Files\PostgreSQL\16\data"
+& $nssm set postgresql-x64-16 DisplayName "postgresql-x64-16 - PostgreSQL Server 16"
+& $nssm set postgresql-x64-16 Start SERVICE_AUTO_START
+& $nssm set postgresql-x64-16 AppDirectory "C:\Program Files\PostgreSQL\16\bin"
+# OJO: AppParameters con la ruta completa entre comillas ("-D `"C:\Program Files\...`"") no
+# sobrevive el paso por PowerShell -> nssm -> CreateProcess: las comillas se pierden y postgres
+# recibe "Files\PostgreSQL\16\data" como argumento suelto ("argumento no válido"). Usar la ruta
+# corta 8.3 (sin espacios) evita el problema por completo — obtenerla con:
+#   (New-Object -ComObject Scripting.FileSystemObject).GetFolder("C:\Program Files\PostgreSQL\16\data").ShortPath
+& $nssm set postgresql-x64-16 AppParameters "-D C:\PROGRA~1\POSTGR~1\16\data"
+# Timeout generoso para el apagado (Ctrl+C -> postmaster hace shutdown "fast"); el default de
+# NSSM (1.5s) es muy corto para checkpoint bajo carga real.
+& $nssm set postgresql-x64-16 AppStopMethodConsole 30000
+# Captura stdout/stderr — sin esto, cualquier error de postgres.exe ANTES de que arranque su
+# propio logging_collector se pierde en silencio (así se diagnosticó el problema de la ruta).
+& $nssm set postgresql-x64-16 AppStdout "C:\Program Files\PostgreSQL\16\data\log\nssm-stdout.log"
+& $nssm set postgresql-x64-16 AppStderr "C:\Program Files\PostgreSQL\16\data\log\nssm-stderr.log"
+# OJO: "password= """ (vacío) hace que sc.exe falle silenciosamente y muestre el USO en vez
+# de aplicar el cambio — para una cuenta virtual (NT AUTHORITY\NetworkService) omitir password= por completo.
+sc.exe config postgresql-x64-16 obj= "NT AUTHORITY\NetworkService"
+sc.exe config postgresql-x64-16 depend= RPCSS
+
+# 4. Arrancar y verificar
+Start-Service postgresql-x64-16
+Get-Service postgresql-x64-16   # esperado: Running
+& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -h localhost -U postgres -c "SELECT 1;"
+
+# 5. CRÍTICO: probar el apagado controlado ANTES de darlo por bueno — confirmar en
+#    data/log/postgresql-*.log que dice algo como "recibida solicitud de apagado rápido" /
+#    "el sistema de base de datos está apagado" (apagado limpio), no un mensaje de recuperación
+#    de fallo en el arranque siguiente (que indicaría que NSSM lo mató en vez de pedirle que
+#    parara).
+Stop-Service postgresql-x64-16
+Start-Service postgresql-x64-16
+```
+
+### Rollback
+
+Si el paso 5 muestra un apagado sucio (o cualquier otra cosa sale mal):
+
+```powershell
+# Si postgres.exe sigue vivo pero el servicio NSSM ya no responde, forzar y limpiar el lock
+Get-Process postgres -ErrorAction SilentlyContinue | Stop-Process -Force
+Remove-Item "C:\Program Files\PostgreSQL\16\data\postmaster.pid" -ErrorAction SilentlyContinue
+
+& $nssm remove postgresql-x64-16 confirm
+
+sc.exe create postgresql-x64-16 `
+  binPath= "\"C:\Program Files\PostgreSQL\16\bin\pg_ctl.exe\" runservice -N \"postgresql-x64-16\" -D \"C:\Program Files\PostgreSQL\16\data\" -w" `
+  start= auto obj= "NT AUTHORITY\NetworkService" depend= RPCSS `
+  DisplayName= "postgresql-x64-16 - PostgreSQL Server 16"
+
+Start-Service postgresql-x64-16
+Get-Service postgresql-x64-16   # esperado: Running
+```
+
+**Nota**: si el rollback fuerza un `Stop-Process`, la próxima vez que arranque Postgres hará
+recuperación de fallo (WAL replay) — normal, no es corrupción, solo tarda un poco más en aceptar
+conexiones.
+
+### Estado: aplicado y validado en producción (2026-09-04)
+
+Migración ejecutada. Verificado con evidencia real, no solo "arrancó":
+
+- El log de Postgres mostró un `checkpoint completo` (1094 búfers escritos, WAL sincronizado)
+  seguido de `el sistema de bases de datos está apagado` al probar `Stop-Service` — apagado
+  limpio real, no un `TerminateProcess`.
+- Tras el reinicio, `Sistema de Permisos - Backend` reportó `db.status: "up"` end-to-end.
+- `Técnico de Sede` ya no tiene `services.manage` (ver más abajo), así que ningún técnico puede
+  repetir el patrón que originó el incidente del 09-04 (`Start-Service` manual sobre servicios
+  dependientes) — solo Administrador y Operador pueden.
+
+Los `nssm-stdout.log` / `nssm-stderr.log` en `data/log/` quedan vacíos en operación normal
+(logging_collector de Postgres se encarga de todo); solo tendrán contenido si `postgres.exe`
+falla antes de inicializar su propio logging — revisarlos primero si el servicio no arranca.
