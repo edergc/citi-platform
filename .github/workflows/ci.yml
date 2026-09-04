@@ -64,3 +64,72 @@ jobs:
       - name: Create the separate test database
         run: PGPASSWORD=citi_ci_password psql -h localhost -U citi_app -d citi_platform -c "CREATE DATABASE citi_platform_test;"
       - run: pytest -v
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # Same rationale as the backend job above — CI's own throwaway superuser, not
+          # real credentials.
+          POSTGRES_USER: citi_app
+          POSTGRES_PASSWORD: citi_ci_password
+          POSTGRES_DB: citi_platform
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U citi_app"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql+psycopg://citi_app:citi_ci_password@localhost:5432/citi_platform
+      SECRET_KEY: ci-only-not-a-real-secret
+      CONFIG_ENCRYPTION_KEY: feZHWN3Alq0ufIBcuOXfpp6852bawQYwd1ICjgF2m-Y=
+      CORS_ORIGINS: '["http://localhost:4173"]'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend deps
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Run migrations
+        working-directory: backend
+        run: alembic upgrade head
+      - name: Seed the one admin account the e2e suite logs in as
+        working-directory: backend
+        run: python scripts/seed_e2e.py
+      - name: Start backend in the background
+        working-directory: backend
+        run: |
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8010 > backend.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8010/health && exit 0; sleep 1; done
+          echo "el backend nunca respondió healthy"; cat backend.log; exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Build frontend against the CI backend
+        working-directory: frontend
+        env:
+          VITE_API_URL: http://localhost:8010/api/v1
+        run: npm run build
+      - name: Serve the build and run the e2e suite
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:4173
+        run: |
+          nohup npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4173 > /dev/null && break; sleep 1; done
+          npx playwright test

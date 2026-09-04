@@ -39,7 +39,14 @@ de desarrollo normal, este paso solo aplica para que el cambio llegue a los téc
 
 Los respaldos de base de datos ahora sí corren solos si el `BackupJob` tiene `schedule_cron`
 configurado (antes del 2026-09-02 el campo existía pero nada lo leía — ver el commit "Actually
-schedule backups"). El botón "Restaurar" (`BackupsSection.tsx` → `POST /backup-runs/{id}/restore`)
+schedule backups"). **Los 6 `BackupJob` reales quedaron programados el 2026-09-04** (07:00 a 07:50
+UTC, escalonados 10 min entre sí = 02:00–02:50 hora de Perú — Perú es UTC-5 todo el año, sin
+horario de verano, y el scheduler evalúa el cron en UTC): CITI Platform, Sistema de Permisos,
+HelpDesk, Celebraciones (BD y archivos), y el ambiente de pruebas de HelpDesk. Antes de esa fecha
+solo existía una corrida `scheduled` real (la del drill del 09-02) — si `SELECT schedule_cron FROM
+backup_jobs` vuelve a salir vacío en el futuro, no hay respaldo automático de nada, revisar primero.
+
+El botón "Restaurar" (`BackupsSection.tsx` → `POST /backup-runs/{id}/restore`)
 **restaura a una base nueva con timestamp** (`{nombre}_restore_{fecha}`), nunca sobrescribe la
 original — confirmado leyendo `agent/citi_agent.py:run_restore_database` (usa `createdb` +
 `pg_restore` a un nombre nuevo) y con un drill real:
@@ -49,12 +56,21 @@ original — confirmado leyendo `agent/citi_agent.py:run_restore_database` (usa 
   usuarios, 55 servidores, 26 sedes, coincide con producción) → base temporal eliminada
   después de verificar.
 
-**Gap encontrado, no resuelto todavía**: la base restaurada solo es legible con el usuario
-`postgres` (superusuario) — `pg_restore` corre con `--no-owner --no-privileges`, así que los
-GRANT del rol `citi_app` (el que usa la app normalmente) no se aplican a la copia restaurada.
-Para usar de verdad una restauración en un escenario real (no solo verificarla), hay que
-correr `GRANT ALL ON ALL TABLES IN SCHEMA public TO citi_app;` (y `SEQUENCES`) en la base
-nueva antes de apuntar la app ahí.
+**Gap cerrado (2026-09-04)**: `pg_restore` corre con `--no-owner --no-privileges`, así que todo
+queda propiedad de `postgres` y el rol de aplicación de cada sistema no podía leer la copia
+restaurada. `run_restore_database` (`agent/citi_agent.py`) ahora acepta un `app_role` opcional y,
+si viene, corre `GRANT` (`USAGE` sobre el schema + `ALL` sobre tablas y secuencias) al terminar el
+`pg_restore`. El backend lo obtiene de un nuevo `ConfigEntry` con `key='APP_ROLE'` por servicio
+(no confundir con `DB_USER`, que sigue siendo el admin/superusuario usado para `createdb`/
+`pg_restore`) — si un servicio no tiene `APP_ROLE` configurado, simplemente se salta el GRANT
+(comportamiento anterior, sin romper nada). Valores ya cargados: `citi_app` (CITI Platform),
+`permisosuser` (Sistema de Permisos), `desklima` (HelpDesk y su ambiente de pruebas),
+`celebrausuario` (Celebraciones).
+
+Validado con un drill real (2026-09-04): restauré el dump de producción más reciente de
+`citi_platform` a `citi_platform_restore_20260904T215702Z` con `app_role='citi_app'` → confirmé
+en `information_schema.role_table_grants` que `citi_app` quedó con `SELECT/INSERT/UPDATE/DELETE`
+en las 42 tablas → base temporal eliminada después de verificar.
 
 ## Si el host único se cae
 

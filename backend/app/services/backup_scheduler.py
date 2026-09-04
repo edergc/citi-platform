@@ -36,6 +36,16 @@ def _get_db_credentials(db: Session, service_id: uuid.UUID) -> dict[str, str]:
     return values
 
 
+def _get_app_role(db: Session, service_id: uuid.UUID) -> str | None:
+    """The least-privilege role the service's own app connects as (distinct from
+    REQUIRED_DB_KEYS' DB_USER, which is the admin/superuser used for backup/restore) —
+    optional, so services without an APP_ROLE entry just skip the post-restore GRANT."""
+    entry = db.scalar(
+        select(ConfigEntry).where(ConfigEntry.service_id == service_id, ConfigEntry.key == "APP_ROLE")
+    )
+    return entry.value if entry is not None else None
+
+
 async def execute_backup_run(
     db: Session,
     job: BackupJob,

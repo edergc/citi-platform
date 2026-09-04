@@ -21,7 +21,7 @@ from app.schemas.backup import (
     RestoreOperationRead,
 )
 from app.services.audit import diff_changed_fields, log_action
-from app.services.backup_scheduler import _get_db_credentials, execute_backup_run
+from app.services.backup_scheduler import _get_app_role, _get_db_credentials, execute_backup_run
 from app.services.incident_notifier import notify_incident, site_id_for_server
 
 router = APIRouter(tags=["backups"], dependencies=[Depends(get_current_user)])
@@ -170,6 +170,7 @@ async def restore_backup_run(
                 "admin_password": creds["DB_PASSWORD"],
                 "source_dbname": creds["DB_NAME"],
                 "dump_path": run.storage_path,
+                "app_role": _get_app_role(db, job.service_id),
             }
         else:
             command = {

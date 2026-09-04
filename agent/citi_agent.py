@@ -405,10 +405,13 @@ def run_backup_database(host: str, port: str, dbname: str, user: str, password: 
 
 
 def run_restore_database(
-    host: str, port: str, admin_user: str, admin_password: str, source_dbname: str, dump_path: str
+    host: str, port: str, admin_user: str, admin_password: str, source_dbname: str, dump_path: str,
+    app_role: str | None = None,
 ) -> tuple[bool, dict]:
     if not DB_IDENTIFIER_RE.match(source_dbname):
         return False, {"error": "Nombre de base de datos inválido"}
+    if app_role is not None and not DB_IDENTIFIER_RE.match(app_role):
+        return False, {"error": "Rol de aplicación inválido"}
     if not Path(dump_path).is_file():
         return False, {"error": f"No se encontró el archivo de respaldo: {dump_path}"}
 
@@ -445,7 +448,35 @@ def run_restore_database(
     if restore.returncode != 0 and "error" in (restore.stderr or "").lower():
         return False, {"error": restore.stderr.strip()[:1000]}
 
-    return True, {"restored_to_path": new_dbname}
+    result = {"restored_to_path": new_dbname}
+    if app_role:
+        # pg_restore ran with --no-owner --no-privileges, so every object in the restored
+        # DB is owned by admin_user (postgres) — the app's own least-privilege role can't
+        # read any of it until this runs. admin_user is the superuser here, so this grant
+        # essentially cannot fail; a failure is still non-fatal to the restore itself
+        # (data is there and verifiable as postgres) but gets surfaced for visibility.
+        grant_sql = (
+            f'GRANT USAGE ON SCHEMA public TO "{app_role}"; '
+            f'GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "{app_role}"; '
+            f'GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "{app_role}";'
+        )
+        try:
+            grant = subprocess.run(
+                [
+                    _pg_tool("psql"), "-h", host, "-p", str(port), "-U", admin_user,
+                    "-d", new_dbname, "-v", "ON_ERROR_STOP=1", "-c", grant_sql,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env=env,
+            )
+            if grant.returncode != 0:
+                result["grant_warning"] = (grant.stderr or grant.stdout).strip()[:500]
+        except subprocess.TimeoutExpired:
+            result["grant_warning"] = "Tiempo de espera agotado aplicando GRANT al rol de aplicación"
+
+    return True, result
 
 
 _io_state: dict = {"net": None, "disk": None, "disk_perdisk": None, "at": None}
@@ -1267,6 +1298,7 @@ async def handle_connection(ws, core_target: str) -> None:
                     message["admin_password"],
                     message["source_dbname"],
                     message["dump_path"],
+                    message.get("app_role"),
                 )
                 print(f"[citi-agent] resultado de la restauración de BD: {'OK' if success else 'FALLO'} - {result}")
                 await ws.send(
